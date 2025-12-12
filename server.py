@@ -1,4 +1,3 @@
-# server.py
 from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
 from scraper import executar_raspagem, ARQUIVO_CSV
@@ -8,27 +7,23 @@ import uvicorn
 
 app = FastAPI(title="API Vagas LinkedIn - Agendada")
 
-# --- CONFIGURAÇÃO DO AGENDADOR (10h e 18h) ---
-scheduler = BackgroundScheduler()
+scheduler = BackgroundScheduler(timezone="America/Sao_Paulo")
 
-# Job 1: 10:00 da manhã
-scheduler.add_job(executar_raspagem, 'cron', hour=10, minute=0)
-
-# Job 2: 17:50 da tarde
-scheduler.add_job(executar_raspagem, 'cron', hour=15, minute=30)
-
-# Job de Teste: Descomente abaixo se quiser ver rodando daqui a 1 minuto para testar
-# scheduler.add_job(executar_raspagem, 'interval', minutes=1)
+scheduler.add_job(executar_raspagem, 'cron', hour=10, minute=0, id="scrape_10")
+scheduler.add_job(executar_raspagem, 'cron', hour=15, minute=59, id="scrape_1559")
 
 scheduler.start()
 
-# --- ENDPOINTS ---
 @app.get("/")
 def status():
+    jobs = scheduler.get_jobs()
     return {
         "sistema": "Online",
-        "agendamento": "Automático às 10:00 e 18:00",
-        "prox_execucao": str(scheduler.get_jobs()[0].next_run_time) if scheduler.get_jobs() else "N/A"
+        "agendamento": "Automático às 10:00 e 15:59 (America/Sao_Paulo)",
+        "proximas_execucoes": [
+            {"id": j.id, "next_run_time": str(j.next_run_time)}
+            for j in jobs
+        ]
     }
 
 @app.get("/vagas")
@@ -43,8 +38,7 @@ def pegar_dados():
 @app.on_event("startup")
 def startup_event():
     print(">>> SERVIDOR INICIADO.")
-    print(">>> O robô vai rodar sozinho às 10:00 e às 18:00.")
+    print(">>> O robô vai rodar sozinho às 10:00 e às 15:59 (America/Sao_Paulo).")
 
-# Se você rodar o arquivo direto pelo python, ele inicia o uvicorn
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)
