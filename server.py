@@ -14,8 +14,8 @@ scheduler = BackgroundScheduler()
 # Job 1: 10:00 da manhã
 scheduler.add_job(executar_raspagem, 'cron', hour=10, minute=0)
 
-# Job 2: 18:00 da tarde
-scheduler.add_job(executar_raspagem, 'cron', hour=14, minute=50)
+# Job 2: 17:50 da tarde
+scheduler.add_job(executar_raspagem, 'cron', hour=17, minute=50)
 
 # Job de Teste: Descomente abaixo se quiser ver rodando daqui a 1 minuto para testar
 # scheduler.add_job(executar_raspagem, 'interval', minutes=1)
