@@ -1,9 +1,7 @@
 from fastapi import FastAPI
 from apscheduler.schedulers.background import BackgroundScheduler
 from scraper import executar_raspagem, ARQUIVO_CSV
-import csv
-import os
-import uvicorn
+import csv, os
 
 app = FastAPI(title="API Vagas LinkedIn - Agendada")
 
@@ -12,7 +10,22 @@ scheduler = BackgroundScheduler(timezone="America/Sao_Paulo")
 scheduler.add_job(executar_raspagem, 'cron', hour=10, minute=0, id="scrape_10")
 scheduler.add_job(executar_raspagem, 'cron', hour=15, minute=59, id="scrape_1559")
 
-scheduler.start()
+@app.on_event("startup")
+def startup_event():
+    print(">>> SERVIDOR INICIADO.")
+    print(">>> O robô vai rodar sozinho às 10:00 e às 15:59 (America/Sao_Paulo).")
+
+    if not scheduler.running:
+        scheduler.start()
+
+    # loga as próximas execuções no console do Render
+    for j in scheduler.get_jobs():
+        print(f">>> JOB {j.id} next_run_time={j.next_run_time}")
+
+@app.on_event("shutdown")
+def shutdown_event():
+    if scheduler.running:
+        scheduler.shutdown()
 
 @app.get("/")
 def status():
@@ -34,11 +47,3 @@ def pegar_dados():
             reader = csv.DictReader(f)
             dados = list(reader)
     return dados
-
-@app.on_event("startup")
-def startup_event():
-    print(">>> SERVIDOR INICIADO.")
-    print(">>> O robô vai rodar sozinho às 10:00 e às 15:59 (America/Sao_Paulo).")
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
