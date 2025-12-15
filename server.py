@@ -8,7 +8,7 @@ app = FastAPI(title="API Vagas LinkedIn - Agendada")
 scheduler = BackgroundScheduler(timezone="America/Sao_Paulo")
 
 scheduler.add_job(executar_raspagem, 'cron', hour=10, minute=0, id="scrape_10")
-scheduler.add_job(executar_raspagem, 'cron', hour=15, minute=59, id="scrape_1559")
+scheduler.add_job(executar_raspagem, 'cron', hour=21, minute=20, id="scrape_1559")
 
 @app.on_event("startup")
 def startup_event():
